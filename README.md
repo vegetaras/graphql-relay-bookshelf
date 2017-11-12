@@ -3,10 +3,12 @@
 ### Example usage
 
 ```javascript
-  const bookshelf = require('./bookshelf')
   const { GraphQLObjectType, GraphQLString } = require('graphql')
-  const { connectionDefinitions, connectionArgs } = require('graphql-relay')
+  const { connectionDefinitions, connectionArgs, globalIdField } = require('graphql-relay')
   const { resolveConnection } = require('graphql-relay-bookshelf')
+
+  // Your bookshelf instance
+  const bookshelf = require('./bookshelf')
 
   // Your bookshelf model
   const User = bookshelf.Model.extend({
@@ -16,7 +18,8 @@
   const UserType = new GraphQLObjectType({
     name: 'User',
     fields: {
-      email: { type: GraphQLString }
+      id: globalIdField(),
+      email: { type: GraphQLString, resolve: ({ attributes }) => attributes.email }
     }
   })
 
@@ -32,5 +35,5 @@
 
 ## TODO
 - [x] Pagination
-- [ ] Select requested columns only
+- [x] Select requested columns only
 - [ ] Parent field scoping
