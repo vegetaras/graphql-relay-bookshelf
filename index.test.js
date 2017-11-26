@@ -8,26 +8,37 @@ const QueryBuilder = (list) => {
   let offset = 0
 
   const queryBuilder = {
+    where: (attributes) => {
+      const keys = Object.keys(attributes)
+
+      items = items.filter(item => keys.map(key => item[key] === attributes[key])
+        .reduce((result, value) => result && value, true)
+      )
+
+      return queryBuilder
+    },
     limit: (count) => {
       limit = count
+
       return queryBuilder
     },
     offset: (count) => {
       offset = count
+
       return queryBuilder
     },
     select: (fields = ['id', 'name']) => {
       items = items.slice(offset, offset + limit)
         .map(item => fields.reduce((result, field) => Object.assign(result, { [field]: item[field] }), {}))
     },
-    result: () => Promise.resolve(items)
+    result: () => Promise.resolve(items),
+    count: () => Promise.resolve(items.length)
   }
 
   return queryBuilder
 }
 
 const Model = {
-  count: () => Promise.resolve(3),
   query: (callback) => {
     const builder = QueryBuilder([
       { id: 1, name: 'Name 1' },
@@ -37,7 +48,7 @@ const Model = {
 
     callback && callback(builder)
 
-    return { fetchAll: builder.result }
+    return { fetchAll: builder.result, count: builder.count }
   }
 }
 
@@ -199,4 +210,24 @@ test('returns requested fields only', async t => {
     { id: 2, name: 'Name 2' },
     { id: 3, name: 'Name 3' }
   ])
+})
+
+test('filters results when where clause is present', async t => {
+  const result = await resolveConnection(
+    Model,
+    ({ id }) => qb => qb.where({ id })
+  )({ id: 2 }, { first: 3 }, {}, defaultResolveInfo)
+
+  t.deepEqual(result, {
+    edges: [{
+      cursor: 'YXJyYXljb25uZWN0aW9uOjA=',
+      node: { id: 2 }
+    }],
+    pageInfo: {
+      endCursor: 'YXJyYXljb25uZWN0aW9uOjA=',
+      startCursor: 'YXJyYXljb25uZWN0aW9uOjA=',
+      hasNextPage: false,
+      hasPreviousPage: false
+    }
+  })
 })

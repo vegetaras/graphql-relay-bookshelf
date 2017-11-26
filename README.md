@@ -28,12 +28,11 @@
     users: {
       type: connectionDefinitions({ nodeType: UserType }).connectionType,
       args: connectionArgs,
-      resolve: resolveConnection(User)
+      resolve: resolveConnection(
+        User,
+        // This argument is optional and gives you access to query builder
+        (parent, { email }) => queryBuilder => queryBuilder.where({ email })
+      )
     }
   }
 ```
-
-## TODO
-- [x] Pagination
-- [x] Select requested columns only
-- [ ] Parent field scoping
